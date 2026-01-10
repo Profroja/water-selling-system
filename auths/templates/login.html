@@ -694,6 +694,73 @@
             }
         }
 
+        /* Mobile floating Ingia button */
+        .mobile-login-btn {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-login-btn {
+                display: flex;
+                position: fixed;
+                bottom: 40px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 16px 60px;
+                background: linear-gradient(135deg, #1e4a7a, #4a9fd8);
+                color: white;
+                border: none;
+                border-radius: 50px;
+                font-size: 18px;
+                font-weight: 700;
+                font-family: 'Poppins', sans-serif;
+                cursor: pointer;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                box-shadow: 0 10px 40px rgba(30, 74, 122, 0.5),
+                            0 0 0 4px rgba(255, 255, 255, 0.2);
+                z-index: 100;
+                align-items: center;
+                gap: 12px;
+                animation: floatButton 2s ease-in-out infinite, glowPulse 2s ease-in-out infinite;
+                transition: all 0.3s ease;
+            }
+
+            .mobile-login-btn:hover {
+                transform: translateX(-50%) scale(1.05);
+                box-shadow: 0 15px 50px rgba(30, 74, 122, 0.6),
+                            0 0 0 6px rgba(255, 255, 255, 0.3);
+            }
+
+            .mobile-login-btn:active {
+                transform: translateX(-50%) scale(0.98);
+            }
+
+            .mobile-login-btn i {
+                font-size: 20px;
+            }
+
+            @keyframes floatButton {
+                0%, 100% {
+                    bottom: 40px;
+                }
+                50% {
+                    bottom: 50px;
+                }
+            }
+
+            @keyframes glowPulse {
+                0%, 100% {
+                    box-shadow: 0 10px 40px rgba(30, 74, 122, 0.5),
+                                0 0 0 4px rgba(255, 255, 255, 0.2);
+                }
+                50% {
+                    box-shadow: 0 10px 50px rgba(74, 159, 216, 0.7),
+                                0 0 0 6px rgba(255, 255, 255, 0.4);
+                }
+            }
+        }
+
             </style>
 </head>
 <body>
@@ -701,6 +768,11 @@
     <div class="wave"></div>
     <div class="wave"></div>
     <div class="wave"></div>
+
+    <!-- Mobile Floating Ingia Button -->
+    <button class="mobile-login-btn" onclick="openLoginForm()">
+        <i>🔐</i> INGIA
+    </button>
 
     <!-- Main Wrapper -->
     <div class="main-wrapper">
