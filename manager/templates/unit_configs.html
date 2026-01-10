@@ -1,0 +1,165 @@
+{% extends 'manager_base.html' %}
+
+{% block title %}Unit Configuration - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .action-btn.activate {
+        color: #2e7d32;
+    }
+    .action-btn.activate:hover {
+        background: #e8f5e9;
+    }
+    .action-btn.deactivate {
+        color: #1565c0;
+    }
+    .action-btn.deactivate:hover {
+        background: #e3f2fd;
+    }
+    .action-btn.activate i,
+    .action-btn.deactivate i {
+        font-size: 18px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="position: relative; z-index: 50;">
+    <h1 class="page-title">Unit (Maji) Configuration</h1>
+    <button class="btn-primary" id="addUnitBtn" style="position: relative; z-index: 100; pointer-events: auto;">
+        <i class="fas fa-plus"></i>
+        Add Unit Config
+    </button>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        {% if unit_configs %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Unit</th>
+                    <th>Price per Unit</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for config in unit_configs %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ config.unit }}</td>
+                    <td>{{ config.price_per_unit }}</td>
+                    <td>{{ config.total_amount }}</td>
+                    <td>
+                        <span class="status-badge {% if config.is_active %}active{% else %}inactive{% endif %}">
+                            {% if config.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ config.created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'toggle_unit_config' config.id %}" class="action-btn {% if config.is_active %}deactivate{% else %}activate{% endif %}" title="{% if config.is_active %}Deactivate{% else %}Activate{% endif %}">
+                            <i class="fas {% if config.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                        </a>
+                        <button class="action-btn" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-cog"></i>
+            <p>No unit configurations found. Click "Add Unit Config" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Unit Config Modal -->
+<div class="modal-overlay" id="addUnitModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Add Unit Configuration</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'unit_config_list' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="unit">Unit (Quantity)</label>
+                    <input type="number" id="unit" name="unit" step="0.01" required placeholder="Enter unit quantity">
+                </div>
+                <div class="form-group">
+                    <label for="price_per_unit">Price per Unit (TZS)</label>
+                    <input type="number" id="price_per_unit" name="price_per_unit" step="0.01" required placeholder="Enter price per unit">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Configuration
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Success!{% else %}Error{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Modal functionality
+    const addUnitBtn = document.getElementById('addUnitBtn');
+    const addUnitModal = document.getElementById('addUnitModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    addUnitBtn.addEventListener('click', () => {
+        addUnitModal.classList.add('active');
+    });
+
+    closeModal.addEventListener('click', () => {
+        addUnitModal.classList.remove('active');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addUnitModal.classList.remove('active');
+    });
+
+    addUnitModal.addEventListener('click', (e) => {
+        if (e.target === addUnitModal) {
+            addUnitModal.classList.remove('active');
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addUnitModal.classList.contains('active')) {
+            addUnitModal.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}

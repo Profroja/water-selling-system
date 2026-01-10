@@ -1,0 +1,552 @@
+{% extends 'staff_base.html' %}
+
+{% block title %}POS - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-container {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        height: calc(100vh - 140px);
+    }
+    
+    /* Products Section */
+    .products-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    .products-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .products-header h2 {
+        margin: 0;
+        font-size: 20px;
+        color: var(--text-dark);
+    }
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    .product-card {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-align: center;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(45, 108, 183, 0.2);
+        border-color: var(--primary-blue);
+    }
+    .product-card .icon {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+    }
+    .product-card .icon i {
+        font-size: 28px;
+        color: white;
+    }
+    .product-card .name {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 5px;
+    }
+    .product-card .unit {
+        font-size: 13px;
+        color: var(--text-light);
+        margin-bottom: 10px;
+    }
+    .product-card .price {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+    .product-card .price span {
+        font-size: 12px;
+        font-weight: 400;
+    }
+    
+    /* Cart Section */
+    .cart-section {
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .cart-header {
+        background: var(--primary-blue);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .cart-header h3 {
+        margin: 0;
+        font-size: 18px;
+    }
+    .cart-count {
+        background: white;
+        color: var(--primary-blue);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+    .cart-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-light);
+    }
+    .cart-empty i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .cart-item-info {
+        flex: 1;
+    }
+    .cart-item-name {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 14px;
+    }
+    .cart-item-price {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    .cart-item-qty {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .qty-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .qty-btn.minus {
+        background: #ffebee;
+        color: #c62828;
+    }
+    .qty-btn.plus {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .qty-value {
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+    }
+    .cart-item-total {
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-left: 15px;
+        min-width: 80px;
+        text-align: right;
+    }
+    .cart-item-remove {
+        background: none;
+        border: none;
+        color: #c62828;
+        cursor: pointer;
+        padding: 5px;
+        margin-left: 10px;
+    }
+    
+    /* Cart Footer */
+    .cart-footer {
+        border-top: 2px solid #eee;
+        padding: 15px;
+    }
+    .cart-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: #f0f7ff;
+        border-radius: 8px;
+    }
+    .cart-total-label {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    .cart-total-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+    .checkout-btn {
+        width: 100%;
+        padding: 15px;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: background 0.3s;
+    }
+    .checkout-btn:hover {
+        background: var(--accent-blue);
+    }
+    .checkout-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    /* No products warning */
+    .no-products {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-light);
+    }
+    .no-products i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        color: #ffc107;
+    }
+    .no-products h3 {
+        margin: 0 0 10px;
+        color: var(--text-dark);
+    }
+    
+    @media (max-width: 992px) {
+        .pos-container {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+        .cart-section {
+            min-height: 400px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            position: relative !important;
+            z-index: 999 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="position: relative; z-index: 50; justify-content: center;">
+    <h1 class="page-title" style="text-align: center;">UZA MAJI</h1>
+</div>
+
+<!-- Available Stock Alert -->
+<div style="background: {% if available_stock > 0 %}linear-gradient(135deg, #e8f5e9, #c8e6c9){% else %}linear-gradient(135deg, #ffebee, #ffcdd2){% endif %}; border-radius: 12px; padding: 15px 25px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 50px; height: 50px; background: {% if available_stock > 0 %}#4caf50{% else %}#e53935{% endif %}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas {% if available_stock > 0 %}fa-warehouse{% else %}fa-exclamation-triangle{% endif %}" style="color: white; font-size: 20px;"></i>
+        </div>
+        <div style="font-weight: 700; font-size: 16px; color: {% if available_stock > 0 %}#2e7d32{% else %}#c62828{% endif %}; text-transform: uppercase;">MAJI YALIYOPO (STOCK)</div>
+    </div>
+    <div style="font-size: 28px; font-weight: 700; color: {% if available_stock > 0 %}#1b5e20{% else %}#b71c1c{% endif %};">{{ available_stock|floatformat:0 }} Units</div>
+</div>
+
+<div class="pos-container">
+    <!-- Products Section -->
+    <div class="products-section">
+        <div class="products-header">
+            <h2><i class="fas fa-tint"></i> UNITS / KIASI</h2>
+        </div>
+        
+        {% if active_config %}
+        <div class="products-grid">
+            <div class="product-card" onclick="addToCart()" data-unit="{{ active_config.unit }}" data-price="{{ active_config.price_per_unit }}">
+                <div class="icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="name">Water Unit</div>
+                <div class="unit">{{ active_config.unit }} Liter(s)</div>
+                <div class="price">TZS {{ active_config.price_per_unit }}<span>/unit</span></div>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-products">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>No Products Available</h3>
+            <p>Please contact manager to set unit prices before selling.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Cart Section -->
+    <div class="cart-section">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-cart"></i> ODA ZOTE</h3>
+            <span class="cart-count" id="cartCount">0</span>
+        </div>
+        
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty" id="cartEmpty">
+                <i class="fas fa-shopping-basket"></i>
+                <p>Cart is empty<br>Click on a product to add</p>
+            </div>
+        </div>
+        
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span class="cart-total-label">Jumla Kiasi</span>
+                <span class="cart-total-value" id="cartTotal">TZS 0</span>
+            </div>
+            <button class="checkout-btn" id="checkoutBtn" disabled onclick="openCheckout()">
+                <i class="fas fa-credit-card"></i>
+                UZA SASA
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">UZA UNITS ( MAJI )</h2>
+            <button class="modal-close" id="closeCheckoutModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'order_list' %}" id="checkoutForm">
+            {% csrf_token %}
+            <input type="hidden" name="units" id="checkoutUnits">
+            <div class="modal-body">
+                <div class="cart-total" style="margin-bottom: 10px;">
+                    <span class="cart-total-label">Jumla Units</span>
+                    <span class="cart-total-value" id="checkoutUnitsDisplay">0</span>
+                </div>
+                <div class="cart-total" style="margin-bottom: 20px;">
+                    <span class="cart-total-label">Jumla Kiasi</span>
+                    <span class="cart-total-value" id="checkoutTotal">TZS 0</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="street">Chagua Mtaa</label>
+                    <select id="street" name="street" required>
+                        <option value="">Select street</option>
+                        {% for street in streets %}
+                        <option value="{{ street.id }}">{{ street.street_name }} - {{ street.district }}, {{ street.region }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customer">Chagua Mteja</label>
+                    <select id="customer" name="customer" required disabled>
+                        <option value="">Select street first</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="payment_method">Aina Ya Malipo</label>
+                    <select id="payment_method" name="payment_method" required>
+                        <option value="">Select payment method</option>
+                        <option value="cash">Cash</option>
+                        <option value="mobile_money">Mobile Money</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelCheckout">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-check"></i>
+                    UZA
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Success!{% else %}Error{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Cart state
+    let cart = {
+        quantity: 0,
+        unitPrice: {% if active_config %}{{ active_config.price_per_unit }}{% else %}0{% endif %},
+        unit: {% if active_config %}{{ active_config.unit }}{% else %}0{% endif %}
+    };
+
+    // Add to cart
+    function addToCart() {
+        cart.quantity += 1;
+        updateCartDisplay();
+    }
+
+    // Update cart display
+    function updateCartDisplay() {
+        const cartItems = document.getElementById('cartItems');
+        const cartEmpty = document.getElementById('cartEmpty');
+        const cartCount = document.getElementById('cartCount');
+        const cartTotal = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        
+        if (cart.quantity > 0) {
+            const total = cart.quantity * cart.unitPrice;
+            cartItems.innerHTML = `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">Water Unit (${cart.unit} L)</div>
+                        <div class="cart-item-price">TZS ${cart.unitPrice.toLocaleString()} each</div>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button type="button" class="qty-btn minus" onclick="decreaseQty()">-</button>
+                        <span class="qty-value">${cart.quantity}</span>
+                        <button type="button" class="qty-btn plus" onclick="increaseQty()">+</button>
+                    </div>
+                    <div class="cart-item-total">TZS ${total.toLocaleString()}</div>
+                    <button type="button" class="cart-item-remove" onclick="removeFromCart()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            cartCount.textContent = cart.quantity;
+            cartTotal.textContent = `TZS ${total.toLocaleString()}`;
+            checkoutBtn.disabled = false;
+        } else {
+            cartItems.innerHTML = `
+                <div class="cart-empty" id="cartEmpty">
+                    <i class="fas fa-shopping-basket"></i>
+                    <p>Cart is empty<br>Click on a product to add</p>
+                </div>
+            `;
+            cartCount.textContent = '0';
+            cartTotal.textContent = 'TZS 0';
+            checkoutBtn.disabled = true;
+        }
+    }
+
+    function increaseQty() {
+        cart.quantity += 1;
+        updateCartDisplay();
+    }
+
+    function decreaseQty() {
+        if (cart.quantity > 1) {
+            cart.quantity -= 1;
+            updateCartDisplay();
+        }
+    }
+
+    function removeFromCart() {
+        cart.quantity = 0;
+        updateCartDisplay();
+    }
+
+    // Checkout Modal
+    const checkoutModal = document.getElementById('checkoutModal');
+    const closeCheckoutModal = document.getElementById('closeCheckoutModal');
+    const cancelCheckout = document.getElementById('cancelCheckout');
+
+    function openCheckout() {
+        if (cart.quantity > 0) {
+            document.getElementById('checkoutUnits').value = cart.quantity;
+            document.getElementById('checkoutUnitsDisplay').textContent = cart.quantity;
+            document.getElementById('checkoutTotal').textContent = `TZS ${(cart.quantity * cart.unitPrice).toLocaleString()}`;
+            checkoutModal.classList.add('active');
+        }
+    }
+
+    closeCheckoutModal.addEventListener('click', () => {
+        checkoutModal.classList.remove('active');
+    });
+
+    cancelCheckout.addEventListener('click', () => {
+        checkoutModal.classList.remove('active');
+    });
+
+    checkoutModal.addEventListener('click', (e) => {
+        if (e.target === checkoutModal) {
+            checkoutModal.classList.remove('active');
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && checkoutModal.classList.contains('active')) {
+            checkoutModal.classList.remove('active');
+        }
+    });
+
+    // Street selection - load customers
+    const streetSelect = document.getElementById('street');
+    const customerSelect = document.getElementById('customer');
+    
+    streetSelect.addEventListener('change', function() {
+        const streetId = this.value;
+        if (streetId) {
+            fetch(`/api/customers-by-street/?street_id=${streetId}`)
+                .then(response => response.json())
+                .then(data => {
+                    customerSelect.innerHTML = '<option value="">Select customer</option>';
+                    data.customers.forEach(customer => {
+                        customerSelect.innerHTML += `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`;
+                    });
+                    customerSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    customerSelect.innerHTML = '<option value="">Error loading customers</option>';
+                });
+        } else {
+            customerSelect.innerHTML = '<option value="">Select street first</option>';
+            customerSelect.disabled = true;
+        }
+    });
+</script>
+{% endblock %}

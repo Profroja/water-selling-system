@@ -1,0 +1,581 @@
+{% extends 'manager_base.html' %}
+{% load humanize %}
+
+{% block title %}Madeni ya Wateja - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard-style Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .stat-icon.blue {
+        background: linear-gradient(135deg, #2196f3, #1565c0);
+        color: white;
+    }
+    .stat-icon.green {
+        background: linear-gradient(135deg, #4caf50, #2e7d32);
+        color: white;
+    }
+    .stat-icon.orange {
+        background: linear-gradient(135deg, #ff9800, #ef6c00);
+        color: white;
+    }
+    .stat-icon.red {
+        background: linear-gradient(135deg, #ef5350, #c62828);
+        color: white;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 5px;
+    }
+    .stat-label {
+        font-size: 14px;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+    
+    /* Table Styling */
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .card-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+    .table-container {
+        padding: 0;
+        overflow-x: auto;
+    }
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .data-table thead {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    }
+    .data-table thead th {
+        padding: 16px 20px;
+        text-align: left;
+        color: black;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .data-table tbody tr {
+        border-bottom: 1px solid #eee;
+        transition: background 0.2s;
+    }
+    .data-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    .data-table tbody td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: var(--text-dark);
+    }
+    .data-table tbody tr:last-child {
+        border-bottom: none;
+    }
+    .amount-cell {
+        font-weight: 700;
+        color: #c62828;
+    }
+    .paid-cell {
+        font-weight: 700;
+        color: #2e7d32;
+    }
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-badge.paid {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .status-badge.unpaid {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        background: none;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        color: var(--text-light);
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .action-btn:hover {
+        background: #e3f2fd;
+        color: var(--primary-blue);
+    }
+    .action-btn.delete:hover {
+        background: #ffebee;
+        color: #c62828;
+    }
+    .action-btn.pay:hover {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-light);
+    }
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    .empty-state p {
+        font-size: 16px;
+        margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .stat-card {
+            text-align: center;
+        }
+        .stat-header {
+            justify-content: center;
+        }
+        .card-header {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Madeni ya Wateja</h1>
+    <button class="btn-primary" id="addDebtBtn">
+        <i class="fas fa-plus"></i>
+        Ongeza Deni
+    </button>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">JUMLA MADENI</div>
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+        </div>
+        <div class="stat-value">TZS {{ total_debts|floatformat:0|intcomma }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">JUMLA UNITS (MAJI)</div>
+        <div class="stat-header">
+            <div class="stat-icon blue">
+                <i class="fas fa-tint"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_units_debt|floatformat:0|intcomma }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">YALIYOLIPWA</div>
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">TZS {{ total_paid|floatformat:0|intcomma }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">YALIYOBAKI</div>
+        <div class="stat-header">
+            <div class="stat-icon orange">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">TZS {{ total_remaining|floatformat:0|intcomma }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Orodha ya Madeni</h2>
+        <div class="search-box" style="position: relative;">
+            <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+            <input type="text" id="debtSearch" placeholder="Tafuta kwa jina la mteja..." style="padding: 10px 15px 10px 38px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 280px;" onkeyup="filterDebts()">
+        </div>
+    </div>
+    <div class="table-container">
+        {% if debts %}
+        <table class="data-table" id="debtsTable">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Order #</th>
+                    <th>Mteja</th>
+                    <th>Mtaa</th>
+                    <th>Units</th>
+                    <th>Kiasi</th>
+                    <th>Kilicholipwa</th>
+                    <th>Kilichobaki</th>
+                    <th>Hali</th>
+                    <th>Tarehe</th>
+                    <th>Vitendo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for debt in debts %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><span style="font-weight: 600; color: var(--primary-blue);">{% if debt.order %}{{ debt.order.order_number }}{% else %}-{% endif %}</span></td>
+                    <td>{{ debt.customer.first_name }} {{ debt.customer.last_name }}</td>
+                    <td>{% if debt.customer.street %}{{ debt.customer.street.street_name }}{% else %}-{% endif %}</td>
+                    <td>{{ debt.units|floatformat:0 }}</td>
+                    <td class="amount-cell">TZS {{ debt.amount|floatformat:0|intcomma }}</td>
+                    <td class="paid-cell">TZS {{ debt.amount_paid|floatformat:0|intcomma }}</td>
+                    <td class="amount-cell">TZS {{ debt.remaining_amount|floatformat:0|intcomma }}</td>
+                    <td>
+                        {% if debt.is_paid %}
+                        <span class="status-badge paid">Limelipwa</span>
+                        {% else %}
+                        <span class="status-badge unpaid">Hajalipwa</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ debt.date|date:"d M, Y" }}</td>
+                    <td>
+                        {% if not debt.is_paid %}
+                        <button class="action-btn pay" title="Lipa" onclick="payDebt({{ debt.id }}, '{{ debt.customer.first_name }} {{ debt.customer.last_name }}', {{ debt.remaining_amount }})">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </button>
+                        {% endif %}
+                        <button class="action-btn" title="Historia ya Malipo" onclick="viewPaymentHistory({{ debt.id }}, '{{ debt.customer.first_name }} {{ debt.customer.last_name }}')">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="action-btn delete" title="Futa" onclick="deleteDebt({{ debt.id }}, '{{ debt.customer.first_name }} {{ debt.customer.last_name }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <p>Hakuna madeni yaliyorekodiwa. Bonyeza "Ongeza Deni" kuongeza.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hidden Forms -->
+<form id="deleteDebtForm" method="POST" action="{% url 'manager_customer_debts' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="debt_id" id="delete_debt_id">
+</form>
+
+<form id="payDebtForm" method="POST" action="{% url 'manager_customer_debts' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="pay">
+    <input type="hidden" name="debt_id" id="pay_debt_id">
+    <input type="hidden" name="payment_amount" id="pay_amount">
+</form>
+
+<!-- Add Debt Modal -->
+<div class="modal-overlay" id="addDebtModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Ongeza Deni Jipya</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'manager_customer_debts' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="customer">Mteja</label>
+                    <select id="customer" name="customer" required style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px;">
+                        <option value="">-- Chagua Mteja --</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.first_name }} {{ customer.last_name }} - {{ customer.phone_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="units">Units (Maji)</label>
+                    <input type="number" id="units" name="units" required placeholder="Idadi ya units" step="0.01" min="0" onchange="calculateAmount()" oninput="calculateAmount()">
+                </div>
+                <div class="form-group">
+                    <label for="amount">Kiasi (TZS) - Bei: TZS {{ price_per_unit|floatformat:0 }}/unit</label>
+                    <input type="number" id="amount" name="amount" required placeholder="Kiasi cha deni" step="0.01" min="0" readonly style="background-color: #f5f5f5;">
+                </div>
+             
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Ghairi</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Ongeza
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Imefanikiwa!{% else %}Kosa{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Modal functionality
+    const addDebtBtn = document.getElementById('addDebtBtn');
+    const addDebtModal = document.getElementById('addDebtModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    addDebtBtn.addEventListener('click', () => {
+        addDebtModal.classList.add('active');
+    });
+
+    closeModal.addEventListener('click', () => {
+        addDebtModal.classList.remove('active');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addDebtModal.classList.remove('active');
+    });
+
+    addDebtModal.addEventListener('click', (e) => {
+        if (e.target === addDebtModal) {
+            addDebtModal.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            addDebtModal.classList.remove('active');
+        }
+    });
+
+    // Price per unit from server
+    const pricePerUnit = {{ price_per_unit }};
+    
+    // Calculate amount based on units
+    function calculateAmount() {
+        const units = parseFloat(document.getElementById('units').value) || 0;
+        const amount = units * pricePerUnit;
+        document.getElementById('amount').value = amount.toFixed(2);
+    }
+
+    // Search function
+    function filterDebts() {
+        const searchValue = document.getElementById('debtSearch').value.toLowerCase();
+        const table = document.getElementById('debtsTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        
+        for (let row of rows) {
+            const customerName = row.cells[2].textContent.toLowerCase();
+            const street = row.cells[3].textContent.toLowerCase();
+            if (customerName.includes(searchValue) || street.includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+
+    // Delete debt function
+    function deleteDebt(id, customerName) {
+        Swal.fire({
+            title: 'Futa Deni?',
+            text: `Una uhakika unataka kufuta deni la "${customerName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#c62828',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ndio, Futa!',
+            cancelButtonText: 'Hapana'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete_debt_id').value = id;
+                document.getElementById('deleteDebtForm').submit();
+            }
+        });
+    }
+
+    // Pay debt function
+    function payDebt(id, customerName, remainingAmount) {
+        Swal.fire({
+            title: 'Lipa Deni',
+            html: `<p>Mteja: <strong>${customerName}</strong></p><p>Kilichobaki: <strong>TZS ${remainingAmount.toLocaleString()}</strong></p>`,
+            input: 'number',
+            inputLabel: 'Kiasi cha Malipo (TZS)',
+            inputPlaceholder: 'Ingiza kiasi',
+            inputAttributes: {
+                min: 1,
+                max: remainingAmount,
+                step: 1
+            },
+            inputValue: remainingAmount,
+            showCancelButton: true,
+            confirmButtonColor: '#2e7d32',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Lipa',
+            cancelButtonText: 'Ghairi',
+            inputValidator: (value) => {
+                if (!value || value <= 0) {
+                    return 'Tafadhali ingiza kiasi halali!';
+                }
+                if (value > remainingAmount) {
+                    return `Kiasi hakiwezi kuzidi TZS ${remainingAmount.toLocaleString()}`;
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('pay_debt_id').value = id;
+                document.getElementById('pay_amount').value = result.value;
+                document.getElementById('payDebtForm').submit();
+            }
+        });
+    }
+
+    // View payment history function
+    function viewPaymentHistory(debtId, customerName) {
+        fetch(`/manager/api/debt-payments/${debtId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    Swal.fire('Kosa', data.error, 'error');
+                    return;
+                }
+                
+                let paymentsHtml = '';
+                if (data.payments.length > 0) {
+                    paymentsHtml = `
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                            <thead>
+                                <tr style="background: #f5f5f5;">
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Tarehe</th>
+                                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Kiasi</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Aliyepokea</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    data.payments.forEach(payment => {
+                        paymentsHtml += `
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #eee;">${payment.date}</td>
+                                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee; color: #2e7d32; font-weight: 600;">TZS ${payment.amount.toLocaleString()}</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #eee;">${payment.received_by}</td>
+                            </tr>
+                        `;
+                    });
+                    paymentsHtml += '</tbody></table>';
+                } else {
+                    paymentsHtml = '<p style="text-align: center; color: #999; margin-top: 20px;">Hakuna malipo yaliyorekodiwa.</p>';
+                }
+                
+                Swal.fire({
+                    title: `Historia ya Malipo`,
+                    html: `
+                        <p style="margin-bottom: 10px;"><strong>Mteja:</strong> ${customerName}</p>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #666;">Jumla Deni</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #c62828;">TZS ${data.total_debt.toLocaleString()}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #666;">Kilicholipwa</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #2e7d32;">TZS ${data.total_paid.toLocaleString()}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #666;">Kilichobaki</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #ff9800;">TZS ${data.remaining.toLocaleString()}</div>
+                            </div>
+                        </div>
+                        ${paymentsHtml}
+                    `,
+                    width: 600,
+                    confirmButtonColor: '#2D6CB7',
+                    confirmButtonText: 'Funga'
+                });
+            })
+            .catch(error => {
+                Swal.fire('Kosa', 'Imeshindwa kupata historia ya malipo.', 'error');
+            });
+    }
+</script>
+{% endblock %}

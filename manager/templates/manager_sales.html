@@ -1,0 +1,235 @@
+{% extends 'manager_base.html' %}
+{% load humanize %}
+
+{% block title %}Sales - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-number {
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--primary-blue);
+    }
+    .receipt-number {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    .payment-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .payment-badge.cash {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .payment-badge.mobile_money {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+    .payment-badge.bank_transfer {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+    .total-amount {
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .summary-card .icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .summary-card .icon.blue {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+    .summary-card .icon.green {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .summary-card .icon.orange {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+    .summary-card .info h4 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+    .summary-card .info p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-light);
+    }
+    
+    /* Filter Dropdown */
+    .filter-dropdown select {
+        padding: 10px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        background: white;
+        cursor: pointer;
+        min-width: 200px;
+    }
+    .filter-dropdown select:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            position: relative !important;
+            z-index: 999 !important;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .filter-dropdown select {
+            width: 100%;
+        }
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+        .summary-card {
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+        }
+        .summary-card .info {
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="position: relative; z-index: 50;">
+    <h1 class="page-title">Sales History (Mauzo)</h1>
+    <div class="filter-dropdown">
+        <select id="weekFilter" onchange="filterByWeek(this.value)">
+            <option value="all" {% if selected_week == 'all' %}selected{% endif %}>All Time</option>
+            {% for week in weeks %}
+            <option value="{{ week.value }}" {% if selected_week == week.value|stringformat:"s" %}selected{% endif %}>{{ week.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <div class="icon blue">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="info">
+            <h4>{{ orders.count }}</h4>
+            <p>ODA</p>
+        </div>
+    </div>
+    <div class="summary-card">
+        <div class="icon green">
+            <i class="fas fa-tint"></i>
+        </div>
+        <div class="info">
+            <h4>{{ total_units|default:"0" }}</h4>
+            <p>UNITS UZWA</p>
+        </div>
+    </div>
+    <div class="summary-card">
+        <div class="icon orange">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="info">
+            <h4>TZS {{ total_revenue|default:"0"|intcomma }}</h4>
+            <p>MAPATO</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        {% if orders %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Order #</th>
+                    <th>Mteja</th>
+                    <th>Mtaa</th>
+                    <th>Units</th>
+                    <th>Unit Price</th>
+                    <th>Jumla</th>
+                    <th>Aina ya Malipo</th>
+                    <th>Tarehe</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><span class="order-number">{{ order.order_number }}</span></td>
+                    <td>{{ order.customer.first_name }} {{ order.customer.last_name }}</td>
+                    <td>{% if order.street %}{{ order.street.street_name }}{% else %}-{% endif %}</td>
+                    <td>{{ order.units }}</td>
+                    <td>TZS {{ order.unit_price|intcomma }}</td>
+                    <td><span class="total-amount">TZS {{ order.total_amount|intcomma }}</span></td>
+                    <td>
+                        <span class="payment-badge {{ order.payment_method }}">
+                            {{ order.get_payment_method_display }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <button class="action-btn" title="View Receipt">
+                            <i class="fas fa-receipt"></i>
+                        </button>
+                        <button class="action-btn" title="Print">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-shopping-cart"></i>
+            <p>No sales found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterByWeek(value) {
+        window.location.href = '?week=' + value;
+    }
+</script>
+{% endblock %}

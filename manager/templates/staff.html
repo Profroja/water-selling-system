@@ -1,0 +1,193 @@
+{% extends 'manager_base.html' %}
+
+{% block title %}Staff Management - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .staff-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-blue), #4A90E2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .staff-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .staff-name {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .staff-email {
+        font-size: 13px;
+        color: var(--text-gray);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Staff Management</h1>
+    <button class="btn-primary" id="addStaffBtn">
+        <i class="fas fa-plus"></i>
+        Add Staff
+    </button>
+</div>
+
+
+<div class="card">
+    <div class="table-container">
+        {% if staff_list %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for staff in staff_list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ staff.username }}</td>
+                    <td>{{ staff.email|default:"-" }}</td>
+                    <td>{{ staff.phone_number|default:"-" }}</td>
+                    <td>
+                        <span class="role-badge {{ staff.role }}">{{ staff.role|title }}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge {% if staff.is_active %}active{% else %}inactive{% endif %}">
+                            {% if staff.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No staff members found. Click "Add Staff" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal-overlay" id="addStaffModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Add New Staff</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'staff_list' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input type="text" id="phone_number" name="phone_number" placeholder="Enter phone number">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter password">
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="">Select role</option>
+                        <option value="manager">Manager</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Staff
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Success!{% else %}Error{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Modal functionality
+    const addStaffBtn = document.getElementById('addStaffBtn');
+    const addStaffModal = document.getElementById('addStaffModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    addStaffBtn.addEventListener('click', () => {
+        addStaffModal.classList.add('active');
+    });
+
+    closeModal.addEventListener('click', () => {
+        addStaffModal.classList.remove('active');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addStaffModal.classList.remove('active');
+    });
+
+    addStaffModal.addEventListener('click', (e) => {
+        if (e.target === addStaffModal) {
+            addStaffModal.classList.remove('active');
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addStaffModal.classList.contains('active')) {
+            addStaffModal.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}

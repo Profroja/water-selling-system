@@ -1,0 +1,357 @@
+{% extends 'manager_base.html' %}
+
+{% block title %}Customers - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .customer-name {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    .street-select-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    .street-select-wrapper select {
+        flex: 1;
+    }
+    .btn-add-street {
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .btn-add-street:hover {
+        background: var(--primary-blue);
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            position: relative !important;
+            z-index: 999 !important;
+        }
+        .page-header .btn-primary {
+            position: relative !important;
+            z-index: 1000 !important;
+            pointer-events: auto !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="position: relative; z-index: 50;">
+    <h1 class="page-title">Wateja (Customers)</h1>
+    <button class="btn-primary" id="addCustomerBtn" style="position: relative; z-index: 100; pointer-events: auto;">
+        <i class="fas fa-plus"></i>
+        Ongeza Mteja
+    </button>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">WATEJA WOTE</div>
+        <div class="stat-header">
+            <div class="stat-icon blue">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_customers }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">WALIO NA MITA ( UNITS )</div>
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-tint"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ customers_with_units }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">WASIO NA MITA ( UNITS )</div>
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-times-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ customers_without_units }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #eee;">
+        <h2 class="card-title" style="margin: 0; font-size: 18px; font-weight: 600;">Orodha ya Wateja</h2>
+        <div class="search-box" style="position: relative;">
+            <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+            <input type="text" id="customerSearch" placeholder="Tafuta kwa jina, simu, mtaa..." style="padding: 10px 15px 10px 38px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 280px; transition: border-color 0.2s;" onkeyup="filterCustomers()">
+        </div>
+    </div>
+    <div class="table-container">
+        {% if customers %}
+        <table class="data-table" id="customersTable">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Jina la Kwanza</th>
+                    <th>Jina la Mwisho</th>
+                    <th>Namba ya Simu</th>
+                    <th>Mtaa</th>
+                    <th>MITA NO.</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ customer.first_name }}</td>
+                    <td>{{ customer.last_name }}</td>
+                    <td>{{ customer.phone_number }}</td>
+                    <td>{% if customer.street %}{{ customer.street }}{% else %}-{% endif %}</td>
+                    <td>{{ customer.total_units }}</td>
+                    <td>
+                        <span class="status-badge {% if customer.is_active %}active{% else %}inactive{% endif %}">
+                            {% if customer.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No customers found. Click "Add Customer" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Customer Modal -->
+<div class="modal-overlay" id="addCustomerModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Ongeza Mteja</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'manager_customer_list' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="first_name">Jina la Kwanza</label>
+                    <input type="text" id="first_name" name="first_name" required placeholder="Enter first name">
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Jina la Mwisho</label>
+                    <input type="text" id="last_name" name="last_name" required placeholder="Enter last name">
+                </div>
+                <div class="form-group">
+                    <label for="phone_number">Namba ya Simu</label>
+                    <input type="text" id="phone_number" name="phone_number" required placeholder="Enter phone number">
+                </div>
+                <div class="form-group">
+                    <label for="street">Mtaa</label>
+                    <div class="street-select-wrapper">
+                        <select id="street" name="street" required>
+                            <option value="">Select street</option>
+                            {% for street in streets %}
+                            <option value="{{ street.id }}">{{ street.street_name }} - {{ street.district }}, {{ street.region }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn-add-street" id="addStreetBtn">
+                            <i class="fas fa-plus"></i> Add Street
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="has_mita">Je, mteja ana Mita (Units)?</label>
+                    <select id="has_mita" name="has_mita" onchange="toggleMitaInput()" style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 100%;">
+                        <option value="no">Hapana (No)</option>
+                        <option value="yes">Ndiyo (Yes)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="mitaInputGroup" style="display: none;">
+                    <label for="total_units">Mita No. (Units)</label>
+                    <input type="number" id="total_units" name="total_units" placeholder="Ingiza idadi ya units" step="0.01" min="0" style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Ongeza Mteja
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Street Modal -->
+<div class="modal-overlay" id="addStreetModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Ongeza Mtaa</h2>
+            <button class="modal-close" id="closeStreetModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'manager_customer_list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_street">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <input type="text" id="region" name="region" required placeholder="Enter region">
+                </div>
+                <div class="form-group">
+                    <label for="district">District</label>
+                    <input type="text" id="district" name="district" required placeholder="Enter district">
+                </div>
+                <div class="form-group">
+                    <label for="street_name">Street Name</label>
+                    <input type="text" id="street_name" name="street_name" required placeholder="Enter street name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelStreetBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Ongeza Mtaa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Success!{% else %}Error{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Customer Modal functionality
+    const addCustomerBtn = document.getElementById('addCustomerBtn');
+    const addCustomerModal = document.getElementById('addCustomerModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    addCustomerBtn.addEventListener('click', () => {
+        addCustomerModal.classList.add('active');
+    });
+
+    closeModal.addEventListener('click', () => {
+        addCustomerModal.classList.remove('active');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addCustomerModal.classList.remove('active');
+    });
+
+    addCustomerModal.addEventListener('click', (e) => {
+        if (e.target === addCustomerModal) {
+            addCustomerModal.classList.remove('active');
+        }
+    });
+
+    // Street Modal functionality
+    const addStreetBtn = document.getElementById('addStreetBtn');
+    const addStreetModal = document.getElementById('addStreetModal');
+    const closeStreetModal = document.getElementById('closeStreetModal');
+    const cancelStreetBtn = document.getElementById('cancelStreetBtn');
+
+    addStreetBtn.addEventListener('click', () => {
+        addCustomerModal.classList.remove('active');
+        addStreetModal.classList.add('active');
+    });
+
+    closeStreetModal.addEventListener('click', () => {
+        addStreetModal.classList.remove('active');
+    });
+
+    cancelStreetBtn.addEventListener('click', () => {
+        addStreetModal.classList.remove('active');
+    });
+
+    addStreetModal.addEventListener('click', (e) => {
+        if (e.target === addStreetModal) {
+            addStreetModal.classList.remove('active');
+        }
+    });
+
+    // Close modals on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            addCustomerModal.classList.remove('active');
+            addStreetModal.classList.remove('active');
+        }
+    });
+
+    // Toggle Mita input visibility
+    function toggleMitaInput() {
+        const hasMita = document.getElementById('has_mita').value;
+        const mitaInputGroup = document.getElementById('mitaInputGroup');
+        const totalUnitsInput = document.getElementById('total_units');
+        
+        if (hasMita === 'yes') {
+            mitaInputGroup.style.display = 'block';
+            totalUnitsInput.required = true;
+        } else {
+            mitaInputGroup.style.display = 'none';
+            totalUnitsInput.required = false;
+            totalUnitsInput.value = '';
+        }
+    }
+
+    // Smart search filter function
+    function filterCustomers() {
+        const searchInput = document.getElementById('customerSearch');
+        const filter = searchInput.value.toLowerCase();
+        const table = document.getElementById('customersTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+            
+            // Search in first name (1), last name (2), phone (3), street (4)
+            for (let j = 1; j <= 4; j++) {
+                if (cells[j]) {
+                    const cellText = cells[j].textContent || cells[j].innerText;
+                    if (cellText.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            rows[i].style.display = found ? '' : 'none';
+        }
+    }
+</script>
+{% endblock %}

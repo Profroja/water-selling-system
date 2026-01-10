@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaFlow - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #0a1e3d;
+            --primary-blue: #1e4a7a;
+            --accent-blue: #2d6ba8;
+            --light-blue: #4a9fd8;
+            --pure-white: #ffffff;
+            --light-gray: #f0f5fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 50%, var(--accent-blue) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Main wrapper for desktop layout */
+        .main-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            max-width: 1200px;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+            padding: 40px;
+        }
+
+        /* Left side - Animated company name */
+        .left-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInLeft 1s ease-out;
+        }
+
+        @keyframes fadeInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .company-name-container {
+            text-align: center;
+        }
+
+        .company-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 72px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: fadeInScale 1.2s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .company-name span {
+            display: inline-block;
+            animation: floatLetter 3s ease-in-out infinite;
+        }
+
+        .company-name span:nth-child(1) { animation-delay: 0s; }
+        .company-name span:nth-child(2) { animation-delay: 0.1s; }
+        .company-name span:nth-child(3) { animation-delay: 0.2s; }
+        .company-name span:nth-child(4) { animation-delay: 0.3s; }
+        .company-name span:nth-child(5) { animation-delay: 0.4s; }
+        .company-name span:nth-child(6) { animation-delay: 0.5s; }
+
+        @keyframes floatLetter {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .company-tagline {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 300;
+            letter-spacing: 2px;
+            animation: fadeIn 1.5s ease-out 0.5s backwards;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Animated water droplet decoration */
+        .droplet-decoration {
+            width: 150px;
+            height: 180px;
+            margin: 30px auto;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
+                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            animation: dropFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes dropFloat {
+            0%, 100% {
+                transform: rotate(-45deg) translateY(0);
+            }
+            50% {
+                transform: rotate(-45deg) translateY(-20px);
+            }
+        }
+
+        .droplet-decoration::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 25%;
+            width: 35%;
+            height: 35%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: shine 2s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Right side - Login form */
+        .right-section {
+            flex: 0 0 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInRight 1s ease-out;
+        }
+
+        @keyframes fadeInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Animated water droplets background */
+        .droplet {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            animation: fall linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(-45deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(100vh) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        /* Animated waves background */
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+            animation: wave 10s linear infinite;
+        }
+
+        .wave:nth-child(2) {
+            bottom: 10px;
+            animation: wave 8s linear infinite;
+            opacity: 0.5;
+        }
+
+        .wave:nth-child(3) {
+            bottom: 20px;
+            animation: wave 12s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-1200px);
+            }
+        }
+
+        /* Main container */
+        .login-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 45px 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3),
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            width: 100%;
+            animation: slideIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s backwards;
+        }
+
+        @keyframes slideIn {
+            0% {
+                transform: translateY(-50px) scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Logo and title */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 35px;
+            animation: fadeInDown 1s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container h1 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--primary-dark);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--accent-blue);
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 22px;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .form-group:nth-child(1) {
+            animation-delay: 0.4s;
+        }
+
+        .form-group:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        label {
+            display: block;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--accent-blue);
+            transition: all 0.3s ease;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 18px 14px 50px;
+            border: 2px solid rgba(30, 74, 122, 0.2);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            background: white;
+            color: var(--primary-dark);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--light-blue);
+            background: var(--light-gray);
+            box-shadow: 0 8px 25px rgba(74, 159, 216, 0.2);
+            transform: translateY(-2px);
+        }
+
+        input:focus + .input-icon {
+            color: var(--light-blue);
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        input::placeholder {
+            color: #a0b4c8;
+        }
+
+        /* Animated water effect on focus */
+        .input-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        input:focus ~ .input-wrapper::after {
+            width: 100%;
+        }
+
+        /* Remember me checkbox */
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+
+        .remember-me label {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 400;
+            text-transform: none;
+            cursor: pointer;
+            color: var(--primary-dark);
+        }
+
+        .forgot-password {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: var(--light-blue);
+            transform: translateX(3px);
+        }
+
+        /* Login button */
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(30, 74, 122, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.8s ease-out 0.7s backwards;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(30, 74, 122, 0.4);
+        }
+
+        .btn-login:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-login:active {
+            transform: translateY(-1px);
+        }
+
+        /* Sign up link */
+        .signup-link {
+            text-align: center;
+            margin-top: 22px;
+            color: var(--primary-dark);
+            font-size: 13px;
+            animation: fadeInUp 0.8s ease-out 0.8s backwards;
+        }
+
+        .signup-link a {
+            color: var(--accent-blue);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .signup-link a:hover {
+            color: var(--light-blue);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-wrapper {
+                flex-direction: column;
+                gap: 40px;
+                padding: 30px 20px;
+            }
+
+            .left-section {
+                flex: none;
+            }
+
+            .company-name {
+                font-size: 56px;
+            }
+
+            .company-tagline {
+                font-size: 20px;
+            }
+
+            .droplet-decoration {
+                width: 120px;
+                height: 144px;
+            }
+
+            .right-section {
+                flex: none;
+                width: 100%;
+                max-width: 420px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-wrapper {
+                gap: 30px;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding-top: 100px;
+            }
+
+            .left-section {
+                width: 100%;
+            }
+
+            .company-name {
+                font-size: 42px;
+            }
+
+            .company-tagline {
+                font-size: 18px;
+            }
+
+            .droplet-decoration {
+                width: 120px;
+                height: 144px;
+                margin: 30px auto;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+            .droplet-decoration:hover {
+                transform: rotate(-45deg) scale(1.1);
+            }
+
+            /* Click hint on mobile */
+            .droplet-decoratifon::after {
+                content: '';
+                position: absolute;
+                bottom: -40px;
+                left: 50%;
+                transform: translateX(-50%) rotate(45deg);
+                color: white;
+                font-size: 14px;
+                font-weight: 500;
+                white-space: nowrap;
+                animation: pulse 2s ease-in-out infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% {
+                    opacity: 0.6;
+                }
+                50% {
+                    opacity: 1;
+                }
+            }
+
+            /* Hide login form initially on mobile */
+            .right-section {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(10, 30, 61, 0.95);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                z-index: 1000;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.4s ease;
+            }
+
+            .right-section.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .login-container {
+                padding: 35px 30px;
+                max-width: 400px;
+                position: relative;
+                transform: scale(0.9);
+                transition: transform 0.4s ease;
+            }
+
+            .right-section.active .login-container {
+                transform: scale(1);
+            }
+
+            /* Close button - hidden on all views */
+            .close-btn {
+                display: none;
+            }
+
+            .logo-container h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-wrapper {
+                padding: 80px 15px 20px 15px;
+            }
+
+            .company-name {
+                font-size: 32px;
+            }
+
+            .company-tagline {
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+
+            .droplet-decoration {
+                width: 100px;
+                height: 120px;
+            }
+
+            .login-container {
+                padding: 30px 25px;
+            }
+
+            input {
+                padding: 12px 16px 12px 45px;
+                font-size: 14px;
+            }
+
+            .input-icon {
+                left: 15px;
+                font-size: 16px;
+            }
+
+            .btn-login {
+                padding: 13px;
+                font-size: 14px;
+            }
+        }
+
+            </style>
+</head>
+<body>
+    <!-- Animated water droplets -->
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Left Section - Animated Company Name -->
+        <div class="left-section">
+            <div class="company-name-container">
+                <h1 class="company-name">
+                    <span>Water Selling System</span>
+                </h1>
+             
+                <h1 class="company-name">
+                </h1>
+                <div class="droplet-decoration"></div>
+                <p class="company-tagline">Pure. Fresh. Reliable.</p>
+            </div>
+        </div>
+
+        <!-- Right Section - Login Form -->
+        <div class="right-section">
+            <div class="login-container">
+                <div class="logo-container">
+                    <h1>Welcome Back</h1>
+                    <p class="subtitle">Login to your account</p>
+                </div>
+
+                <form id="loginForm" method="POST">
+                    {% csrf_token %}
+                    {% if messages %}
+                    <div class="alert-error" style="background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">
+                        {% for message in messages %}
+                        {{ message }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                            <div class="input-icon">👤</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            <div class="input-icon">🔒</div>
+                        </div>
+                    </div>
+
+                    <div class="remember-forgot">
+                        
+                        <a href="#" class="forgot-password">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-login">Login</button>
+                </form>
+
+               
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create animated water droplets
+        function createDroplets() {
+            const dropletCount = 15;
+            for (let i = 0; i < dropletCount; i++) {
+                const droplet = document.createElement('div');
+                droplet.className = 'droplet';
+                
+                const size = Math.random() * 20 + 10;
+                droplet.style.width = size + 'px';
+                droplet.style.height = size + 'px';
+                droplet.style.left = Math.random() * 100 + '%';
+                droplet.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                droplet.style.animationDelay = Math.random() * 5 + 's';
+                
+                document.body.appendChild(droplet);
+            }
+        }
+
+        createDroplets();
+
+        // Mobile popup functionality
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        function openLoginForm() {
+            if (isMobile()) {
+                const rightSection = document.querySelector('.right-section');
+                rightSection.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeLoginForm() {
+            if (isMobile()) {
+                const rightSection = document.querySelector('.right-section');
+                rightSection.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Add click event to water droplet decoration
+        document.querySelector('.droplet-decoration').addEventListener('click', openLoginForm);
+
+        // Close on background click (mobile only)
+        document.querySelector('.right-section').addEventListener('click', function(e) {
+            if (isMobile() && e.target === this) {
+                closeLoginForm();
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (!isMobile()) {
+                document.body.style.overflow = '';
+                document.querySelector('.right-section').classList.remove('active');
+            }
+        });
+
+        // Form submission handler - show loading state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = document.querySelector('.btn-login');
+            btn.textContent = 'Logging in...';
+            btn.style.background = 'linear-gradient(135deg, var(--light-blue), var(--accent-blue))';
+        });
+    </script>
+</body>
+</html>

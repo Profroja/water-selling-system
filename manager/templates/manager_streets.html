@@ -1,0 +1,139 @@
+{% extends 'manager_base.html' %}
+
+{% block title %}Mitaa (Streets) - Water Selling System{% endblock %}
+
+{% block content %}
+<div class="page-header" style="position: relative; z-index: 50;">
+    <h1 class="page-title">Mitaa (Streets)</h1>
+    <button class="btn-primary" id="addStreetBtn" style="position: relative; z-index: 100; pointer-events: auto;">
+        <i class="fas fa-plus"></i>
+        Add Street
+    </button>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        {% if streets %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>MTAA</th>
+                    <th>WILAYA</th>
+                    <th>MKOA</th>
+                    <th>WATEJA</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for street in streets %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ street.street_name }}</td>
+                    <td>{{ street.district }}</td>
+                    <td>{{ street.region }}</td>
+                    <td>{{ street.customers.count }}</td>
+                    <td>
+                        <button class="action-btn" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-map-marker-alt"></i>
+            <p>No streets found. Click "Add Street" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Street Modal -->
+<div class="modal-overlay" id="addStreetModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Onngeza Mtaa Mpya</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'manager_street_list' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="region">MKOA</label>
+                    <input type="text" id="region" name="region" required placeholder="Enter region">
+                </div>
+                <div class="form-group">
+                    <label for="district">WILAYA</label>
+                    <input type="text" id="district" name="district" required placeholder="Enter district">
+                </div>
+                <div class="form-group">
+                    <label for="street_name">JINA LA MTAA</label>
+                    <input type="text" id="street_name" name="street_name" required placeholder="Enter street name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    ONGEZA
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Success!{% else %}Error{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Modal functionality
+    const addStreetBtn = document.getElementById('addStreetBtn');
+    const addStreetModal = document.getElementById('addStreetModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    addStreetBtn.addEventListener('click', () => {
+        addStreetModal.classList.add('active');
+    });
+
+    closeModal.addEventListener('click', () => {
+        addStreetModal.classList.remove('active');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addStreetModal.classList.remove('active');
+    });
+
+    addStreetModal.addEventListener('click', (e) => {
+        if (e.target === addStreetModal) {
+            addStreetModal.classList.remove('active');
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addStreetModal.classList.contains('active')) {
+            addStreetModal.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}

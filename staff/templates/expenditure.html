@@ -1,0 +1,523 @@
+{% extends 'staff_base.html' %}
+{% load humanize %}
+
+{% block title %}Expenditure - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard-style Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .stat-icon.green {
+        background: linear-gradient(135deg, #4caf50, #2e7d32);
+        color: white;
+    }
+    .stat-icon.red {
+        background: linear-gradient(135deg, #ef5350, #c62828);
+        color: white;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 5px;
+    }
+    .stat-label {
+        font-size: 14px;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+    
+    /* Table Styling */
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    .table-container {
+        padding: 0;
+    }
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .data-table thead {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    }
+    .data-table thead th {
+        padding: 16px 20px;
+        text-align: left;
+        color: black;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .data-table tbody tr {
+        border-bottom: 1px solid #eee;
+        transition: background 0.2s;
+    }
+    .data-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    .data-table tbody td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: var(--text-dark);
+    }
+    .data-table tbody tr:last-child {
+        border-bottom: none;
+    }
+    .amount-cell {
+        font-weight: 700;
+        color: #c62828;
+        font-size: 15px;
+    }
+    .purpose-cell {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Modal Styling */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+    }
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal {
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        transform: scale(0.9) translateY(20px);
+        transition: transform 0.3s ease;
+        overflow: hidden;
+    }
+    .modal-overlay.active .modal {
+        transform: scale(1) translateY(0);
+    }
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    .modal-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    .modal-body {
+        padding: 25px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 14px;
+    }
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 15px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(45, 108, 183, 0.1);
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    .modal-footer {
+        padding: 20px 25px;
+        background: #f8f9fa;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+    .btn-secondary {
+        padding: 12px 24px;
+        border: 2px solid #e0e0e0;
+        background: white;
+        color: var(--text-dark);
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+        background: #f5f5f5;
+        border-color: #ccc;
+    }
+    .btn-primary {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(45, 108, 183, 0.3);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-light);
+    }
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    .empty-state p {
+        font-size: 16px;
+        margin: 0;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        background: none;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        color: var(--text-light);
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .action-btn:hover {
+        background: #e3f2fd;
+        color: var(--primary-blue);
+    }
+    .action-btn.delete:hover {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    /* Filter Dropdown */
+    .filter-dropdown select {
+        padding: 10px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        background: white;
+        cursor: pointer;
+        min-width: 200px;
+    }
+    .filter-dropdown select:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+    }
+    
+    @media (max-width: 768px) {
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+        .page-header {
+            position: relative !important;
+            z-index: 999 !important;
+        }
+        .page-header .btn-primary {
+            position: relative !important;
+            z-index: 1000 !important;
+            pointer-events: auto !important;
+        }
+        .modal {
+            width: 95%;
+            margin: 20px;
+        }
+        .data-table thead th,
+        .data-table tbody td {
+            padding: 12px 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="position: relative; z-index: 50;">
+    <h1 class="page-title">Expenditure (Matumizi)</h1>
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <div class="filter-dropdown">
+            <select id="weekFilter" onchange="filterByWeek(this.value)">
+                <option value="all" {% if selected_week == 'all' %}selected{% endif %}>All Time</option>
+                {% for week in weeks %}
+                <option value="{{ week.value }}" {% if selected_week == week.value|stringformat:"s" %}selected{% endif %}>{{ week.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn-primary" id="addExpenditureBtn" style="position: relative; z-index: 100; pointer-events: auto;">
+            <i class="fas fa-plus"></i>
+            Add Expenditure
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">Amount Available (Remaining)</div>
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-wallet"></i>
+            </div>
+        </div>
+        <div class="stat-value">TZS {{ amount_available|floatformat:0|intcomma }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label" style="font-size: 16px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 15px;">Total Expenditure</div>
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+        </div>
+        <div class="stat-value">TZS {{ total_expenditure|floatformat:0|intcomma }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        {% if expenditures %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Purpose</th>
+                    <th>Added By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in expenditures %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ exp.date|date:"M d, Y" }}</td>
+                    <td><span class="amount-cell">TZS {{ exp.amount|intcomma }}</span></td>
+                    <td class="purpose-cell" title="{{ exp.purpose }}">{{ exp.purpose }}</td>
+                    <td>{% if exp.created_by %}{{ exp.created_by.username }}{% else %}-{% endif %}</td>
+                    <td>
+                        <button class="action-btn delete" title="Delete" onclick="deleteExpenditure({{ exp.id }}, '{{ exp.purpose|escapejs }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-money-bill-wave"></i>
+            <p>No expenditures found. Click "Add Expenditure" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hidden Delete Form -->
+<form id="deleteExpenditureForm" method="POST" action="{% url 'expenditure_list' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="expenditure_id" id="delete_expenditure_id">
+</form>
+
+<!-- Add Expenditure Modal -->
+<div class="modal-overlay" id="addExpenditureModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Add Expenditure</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'expenditure_list' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount (TZS)</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0.01" required placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                    <label for="purpose">Purpose</label>
+                    <textarea id="purpose" name="purpose" rows="3" required placeholder="Enter purpose of expenditure"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Expenditure
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show SweetAlert2 messages from Django
+    {% if messages %}
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{% if message.tags == "success" %}Success!{% else %}Error{% endif %}',
+        text: '{{ message }}',
+        confirmButtonColor: '#2D6CB7',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    {% endfor %}
+    {% endif %}
+
+    // Modal functionality
+    const addExpenditureBtn = document.getElementById('addExpenditureBtn');
+    const addExpenditureModal = document.getElementById('addExpenditureModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    addExpenditureBtn.addEventListener('click', () => {
+        addExpenditureModal.classList.add('active');
+    });
+
+    closeModal.addEventListener('click', () => {
+        addExpenditureModal.classList.remove('active');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addExpenditureModal.classList.remove('active');
+    });
+
+    addExpenditureModal.addEventListener('click', (e) => {
+        if (e.target === addExpenditureModal) {
+            addExpenditureModal.classList.remove('active');
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addExpenditureModal.classList.contains('active')) {
+            addExpenditureModal.classList.remove('active');
+        }
+    });
+
+    // Week filter function
+    function filterByWeek(value) {
+        window.location.href = '?week=' + value;
+    }
+
+    // Delete expenditure function
+    function deleteExpenditure(id, purpose) {
+        Swal.fire({
+            title: 'Futa Matumizi?',
+            text: `Una uhakika unataka kufuta: "${purpose}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#c62828',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ndio, Futa!',
+            cancelButtonText: 'Hapana'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete_expenditure_id').value = id;
+                document.getElementById('deleteExpenditureForm').submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

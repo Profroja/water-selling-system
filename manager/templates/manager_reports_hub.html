@@ -1,0 +1,174 @@
+{% extends 'manager_base.html' %}
+{% load humanize %}
+
+{% block title %}Reports - Water Selling System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 30px;
+    }
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+    
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-top: 20px;
+    }
+    
+    .report-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        border: 2px solid transparent;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        border-color: var(--accent-blue);
+    }
+    
+    .report-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+    
+    .report-card:hover .report-icon {
+        transform: scale(1.1);
+    }
+    
+    .report-icon.blue {
+        background: linear-gradient(135deg, #2196f3, #1565c0);
+        color: white;
+    }
+    
+    .report-icon.green {
+        background: linear-gradient(135deg, #4caf50, #2e7d32);
+        color: white;
+    }
+    
+    .report-icon.orange {
+        background: linear-gradient(135deg, #ff9800, #ef6c00);
+        color: white;
+    }
+    
+    .report-icon.purple {
+        background: linear-gradient(135deg, #9c27b0, #6a1b9a);
+        color: white;
+    }
+    
+    .report-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 10px;
+    }
+    
+    .report-description {
+        font-size: 14px;
+        color: var(--text-gray);
+        line-height: 1.5;
+    }
+    
+    .report-arrow {
+        margin-top: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-gray);
+        transition: all 0.3s ease;
+    }
+    
+    .report-card:hover .report-arrow {
+        background: var(--accent-blue);
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .reports-grid {
+            grid-template-columns: 1fr;
+        }
+        .page-title {
+            font-size: 22px;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">RIPOTI (Reports)</h1>
+</div>
+
+<div class="reports-grid">
+    <a href="{% url 'manager_water_production_report' %}" class="report-card">
+        <div class="report-icon blue">
+            <i class="fas fa-water"></i>
+        </div>
+        <h3 class="report-title">WATER PRODUCTION</h3>
+        <p class="report-description">Grafu za uzalishaji wa maji, mauzo na stock iliyobaki</p>
+        <div class="report-arrow">
+            <i class="fas fa-arrow-right"></i>
+        </div>
+    </a>
+    
+    <a href="{% url 'manager_wateja_report' %}" class="report-card">
+        <div class="report-icon green">
+            <i class="fas fa-users"></i>
+        </div>
+        <h3 class="report-title">WATEJA WOTE</h3>
+        <p class="report-description">Grafu za wateja, orodha kwa mtaa na download Excel</p>
+        <div class="report-arrow">
+            <i class="fas fa-arrow-right"></i>
+        </div>
+    </a>
+    
+    <a href="{% url 'manager_mitaa_report' %}" class="report-card">
+        <div class="report-icon orange">
+            <i class="fas fa-map-marker-alt"></i>
+        </div>
+        <h3 class="report-title">MITAA</h3>
+        <p class="report-description">Grafu za mahitaji ya maji kwa kila mtaa na ulinganisho</p>
+        <div class="report-arrow">
+            <i class="fas fa-arrow-right"></i>
+        </div>
+    </a>
+    
+    <a href="{% url 'manager_mapato_report' %}" class="report-card">
+        <div class="report-icon purple">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <h3 class="report-title">RIPOTI MAPATO</h3>
+        <p class="report-description">Grafu za mapato, matumizi na kipato kwa wiki na mwaka, download Excel</p>
+        <div class="report-arrow">
+            <i class="fas fa-arrow-right"></i>
+        </div>
+    </a>
+</div>
+{% endblock %}
