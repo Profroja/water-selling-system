@@ -33,6 +33,18 @@ def customer_list(request):
                 messages.error(request, 'Please fill in all street fields.')
             return redirect('customer_list')
         
+        elif action == 'delete_customer':
+            customer_id = request.POST.get('customer_id')
+            if customer_id:
+                try:
+                    customer = Customer.objects.get(id=customer_id)
+                    customer_name = f"{customer.first_name} {customer.last_name}".strip()
+                    customer.delete()
+                    messages.success(request, f'Mteja "{customer_name}" amefutwa.')
+                except Customer.DoesNotExist:
+                    messages.error(request, 'Mteja hajapatikana.')
+            return redirect('customer_list')
+        
         else:
             first_name = request.POST.get('first_name')
             last_name = request.POST.get('last_name')

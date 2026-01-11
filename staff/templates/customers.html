@@ -137,7 +137,7 @@
                         <button class="action-btn" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn delete" title="Delete">
+                        <button class="action-btn delete" title="Delete" onclick="deleteCustomer({{ customer.id }}, '{{ customer.first_name }} {{ customer.last_name }}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -247,6 +247,13 @@
         </form>
     </div>
 </div>
+
+<!-- Hidden Delete Form -->
+<form id="deleteCustomerForm" method="POST" action="{% url 'customer_list' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_customer">
+    <input type="hidden" name="customer_id" id="delete_customer_id">
+</form>
 
 <!-- Upload Excel Modal -->
 <div class="modal-overlay" id="uploadExcelModal" style="display: none;">
@@ -397,6 +404,25 @@
             
             rows[i].style.display = found ? '' : 'none';
         }
+    }
+
+    // Delete customer function
+    function deleteCustomer(customerId, customerName) {
+        Swal.fire({
+            title: 'Una uhakika?',
+            text: `Unataka kufuta mteja "${customerName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ndio, Futa!',
+            cancelButtonText: 'Hapana'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete_customer_id').value = customerId;
+                document.getElementById('deleteCustomerForm').submit();
+            }
+        });
     }
 </script>
 {% endblock %}
