@@ -17,9 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from auths.views import login_view, logout_view
-from manager.views import manager_dashboard, staff_list, manager_customer_list, manager_street_list, manager_sales_list, manager_expenditure_list, manager_weekly_report, manager_reports, manager_water_production, manager_customer_debts, manager_get_debt_payments, manager_reports_hub, manager_mitaa_report, manager_wateja_report, manager_wateja_excel, manager_water_production_report, manager_mapato_report, manager_mapato_excel
+from manager.views import manager_dashboard, staff_list, manager_customer_list, manager_street_list, manager_sales_list, manager_expenditure_list, manager_weekly_report, manager_reports, manager_water_production, manager_customer_debts, manager_get_debt_payments, manager_reports_hub, manager_mitaa_report, manager_wateja_report, manager_wateja_excel, manager_water_production_report, manager_mapato_report, manager_mapato_excel, download_customer_template, upload_customers_excel
 from staff.views import staff_dashboard, order_list, get_customers_by_street, sales_list, expenditure_list, weekly_report, water_production_list, customer_debts_list, get_debt_payments
-from customers.views import customer_list, street_list
+from customers.views import customer_list, street_list, staff_download_customer_template, staff_upload_customers_excel
 from unit_configs.views import unit_config_list, toggle_unit_config
 
 urlpatterns = [
@@ -44,6 +44,8 @@ urlpatterns = [
     path('manager/water-production-report/', manager_water_production_report, name='manager_water_production_report'),
     path('manager/mapato-report/', manager_mapato_report, name='manager_mapato_report'),
     path('manager/mapato-excel/', manager_mapato_excel, name='manager_mapato_excel'),
+    path('manager/customers/download-template/', download_customer_template, name='download_customer_template'),
+    path('manager/customers/upload-excel/', upload_customers_excel, name='upload_customers_excel'),
     path('staff/dashboard/', staff_dashboard, name='staff_dashboard'),
     path('staff/orders/', order_list, name='order_list'),
     path('staff/sales/', sales_list, name='sales_list'),
@@ -54,6 +56,8 @@ urlpatterns = [
     path('api/debt-payments/<int:debt_id>/', get_debt_payments, name='get_debt_payments'),
     path('api/customers-by-street/', get_customers_by_street, name='get_customers_by_street'),
     path('customers/', customer_list, name='customer_list'),
+    path('customers/download-template/', staff_download_customer_template, name='staff_download_customer_template'),
+    path('customers/upload-excel/', staff_upload_customers_excel, name='staff_upload_customers_excel'),
     path('streets/', street_list, name='street_list'),
     path('unit-configs/', unit_config_list, name='unit_config_list'),
     path('unit-configs/toggle/<int:config_id>/', toggle_unit_config, name='toggle_unit_config'),

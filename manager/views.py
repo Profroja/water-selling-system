@@ -1900,3 +1900,158 @@ def manager_water_production_list(request):
         'selected_month': selected_month,
         'selected_year': selected_year,
     })
+
+
+@login_required(login_url='login')
+def download_customer_template(request):
+    """Download Excel template for bulk customer import"""
+    if request.user.role != 'manager':
+        return redirect('login')
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Wateja Template"
+    
+    # Define styles
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    header_fill = PatternFill(start_color="0066CC", end_color="0066CC", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Headers
+    headers = ['Jina la Kwanza', 'Jina la Mwisho', 'Namba ya Simu', 'Region', 'District', 'Mtaa (Street)', 'Mita No. (Units)']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Set column widths
+    column_widths = [20, 20, 18, 15, 15, 20, 18]
+    for col, width in enumerate(column_widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = width
+    
+    # Add example row
+    example_data = ['Juma', 'Hassan', '0712345678', 'Dar es Salaam', 'Kinondoni', 'Mwenge', '0']
+    for col, value in enumerate(example_data, 1):
+        cell = ws.cell(row=2, column=col, value=value)
+        cell.border = thin_border
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Add instructions row
+    ws.cell(row=4, column=1, value="MAELEKEZO:")
+    ws.cell(row=4, column=1).font = Font(bold=True, color="FF0000")
+    ws.cell(row=5, column=1, value="1. Jina la Kwanza ni lazima (required)")
+    ws.cell(row=6, column=1, value="2. Jina la Mwisho si lazima (optional)")
+    ws.cell(row=7, column=1, value="3. Namba ya Simu ni lazima (required)")
+    ws.cell(row=8, column=1, value="4. Region, District, na Mtaa ni lazima - mtaa utaundwa kama haupo")
+    ws.cell(row=9, column=1, value="5. Mita No. weka 0 kama mteja hana mita")
+    ws.cell(row=10, column=1, value="6. Futa mfano wa row 2 kabla ya kuupload")
+    
+    # Create response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="wateja_template.xlsx"'
+    wb.save(response)
+    return response
+
+
+@login_required(login_url='login')
+def upload_customers_excel(request):
+    """Upload Excel file to bulk import customers"""
+    if request.user.role != 'manager':
+        return redirect('login')
+    
+    if request.method != 'POST':
+        return redirect('manager_customer_list')
+    
+    excel_file = request.FILES.get('excel_file')
+    if not excel_file:
+        messages.error(request, 'Tafadhali chagua faili ya Excel.')
+        return redirect('manager_customer_list')
+    
+    if not excel_file.name.endswith(('.xlsx', '.xls')):
+        messages.error(request, 'Tafadhali upload faili ya Excel (.xlsx au .xls).')
+        return redirect('manager_customer_list')
+    
+    try:
+        wb = openpyxl.load_workbook(excel_file)
+        ws = wb.active
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        # Skip header row, start from row 2
+        for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            # Skip empty rows
+            if not row or not any(row):
+                continue
+            
+            first_name = str(row[0]).strip() if row[0] else ''
+            last_name = str(row[1]).strip() if row[1] else ''
+            phone_number = str(row[2]).strip() if row[2] else ''
+            region = str(row[3]).strip() if row[3] else ''
+            district = str(row[4]).strip() if row[4] else ''
+            street_name = str(row[5]).strip() if row[5] else ''
+            
+            try:
+                total_units = float(row[6]) if row[6] else 0
+            except (ValueError, TypeError):
+                total_units = 0
+            
+            # Validate required fields
+            if not first_name:
+                errors.append(f"Row {row_num}: Jina la Kwanza halijajazwa")
+                error_count += 1
+                continue
+            
+            if not phone_number:
+                errors.append(f"Row {row_num}: Namba ya Simu haijajazwa")
+                error_count += 1
+                continue
+            
+            if not region or not district or not street_name:
+                errors.append(f"Row {row_num}: Region, District, au Mtaa haijajazwa")
+                error_count += 1
+                continue
+            
+            # Get or create street
+            street, _ = Street.objects.get_or_create(
+                region=region,
+                district=district,
+                street_name=street_name
+            )
+            
+            # Create customer
+            Customer.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone_number,
+                street=street,
+                total_units=total_units
+            )
+            success_count += 1
+        
+        if success_count > 0:
+            messages.success(request, f'Wateja {success_count} wameongezwa kwa mafanikio!')
+        
+        if error_count > 0:
+            error_msg = f'Wateja {error_count} hawakuongezwa. '
+            if errors[:5]:
+                error_msg += 'Makosa: ' + '; '.join(errors[:5])
+                if len(errors) > 5:
+                    error_msg += f' ... na mengine {len(errors) - 5}'
+            messages.warning(request, error_msg)
+        
+    except Exception as e:
+        messages.error(request, f'Hitilafu wakati wa kusoma faili: {str(e)}')
+    
+    return redirect('manager_customer_list')

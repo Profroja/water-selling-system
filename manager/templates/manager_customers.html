@@ -47,10 +47,20 @@
 {% block content %}
 <div class="page-header" style="position: relative; z-index: 50;">
     <h1 class="page-title">Wateja (Customers)</h1>
-    <button class="btn-primary" id="addCustomerBtn" style="position: relative; z-index: 100; pointer-events: auto;">
-        <i class="fas fa-plus"></i>
-        Ongeza Mteja
-    </button>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'download_customer_template' %}" class="btn-primary" style="background: #28a745; text-decoration: none;">
+            <i class="fas fa-download"></i>
+            Download Template
+        </a>
+        <button type="button" class="btn-primary" style="background: #17a2b8;" onclick="document.getElementById('uploadExcelModal').style.display='flex'">
+            <i class="fas fa-upload"></i>
+            Upload Excel
+        </button>
+        <button class="btn-primary" id="addCustomerBtn" style="position: relative; z-index: 100; pointer-events: auto;">
+            <i class="fas fa-plus"></i>
+            Ongeza Mteja
+        </button>
+    </div>
 </div>
 
 <!-- Stats Cards -->
@@ -232,6 +242,41 @@
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-plus"></i>
                     Ongeza Mtaa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Upload Excel Modal -->
+<div class="modal-overlay" id="uploadExcelModal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Upload Wateja Excel</h2>
+            <button class="modal-close" onclick="document.getElementById('uploadExcelModal').style.display='none'">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'upload_customers_excel' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="excel_file">Chagua Faili ya Excel (.xlsx)</label>
+                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx,.xls" required style="padding: 10px; border: 2px dashed #e0e0e0; border-radius: 10px; width: 100%; cursor: pointer;">
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <p style="margin: 0 0 10px 0; font-weight: 600; color: #333;"><i class="fas fa-info-circle" style="color: #17a2b8;"></i> Maelekezo:</p>
+                    <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 13px;">
+                        <li>Kwanza download template kwa kubonyeza "Download Template"</li>
+                        <li>Jaza taarifa za wateja kwenye Excel</li>
+                        <li>Futa mfano wa row 2 kabla ya kuupload</li>
+                        <li>Mitaa mipya itaundwa automatically</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('uploadExcelModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn-primary" style="background: #17a2b8;">
+                    <i class="fas fa-upload"></i>
+                    Upload
                 </button>
             </div>
         </form>
