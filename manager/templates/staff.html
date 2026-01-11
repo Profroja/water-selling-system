@@ -32,6 +32,21 @@
         font-size: 13px;
         color: var(--text-gray);
     }
+
+    .action-btn.toggle {
+        color: #ff9800;
+    }
+    .action-btn.toggle:hover {
+        background: #fff3e0;
+        color: #e65100;
+    }
+    .action-btn.edit {
+        color: #2196f3;
+    }
+    .action-btn.edit:hover {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
 </style>
 {% endblock %}
 
@@ -76,10 +91,13 @@
                         </span>
                     </td>
                     <td>
-                        <button class="action-btn" title="Edit">
+                        <button class="action-btn edit" title="Edit" onclick="openEditModal({{ staff.id }}, '{{ staff.username }}', '{{ staff.email|default:"" }}', '{{ staff.phone_number|default:"" }}', '{{ staff.role }}')">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn delete" title="Delete">
+                        <button class="action-btn toggle" title="{% if staff.is_active %}Deactivate{% else %}Activate{% endif %}" onclick="confirmToggleStatus({{ staff.id }}, '{{ staff.username }}', {{ staff.is_active|yesno:'true,false' }})">
+                            <i class="fas {% if staff.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                        </button>
+                        <button class="action-btn delete" title="Delete" onclick="confirmDelete({{ staff.id }}, '{{ staff.username }}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -112,7 +130,7 @@
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter email address">
+                    <input type="email" id="email" name="email" placeholder="Enter email address">
                 </div>
                 <div class="form-group">
                     <label for="phone_number">Phone Number</label>
@@ -141,6 +159,67 @@
         </form>
     </div>
 </div>
+
+<!-- Edit Staff Modal -->
+<div class="modal-overlay" id="editStaffModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Edit Staff</h2>
+            <button class="modal-close" id="closeEditModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'staff_list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_username">Username</label>
+                    <input type="text" id="edit_username" name="username" required placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="edit_email">Email</label>
+                    <input type="email" id="edit_email" name="email" placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="edit_phone_number">Phone Number</label>
+                    <input type="text" id="edit_phone_number" name="phone_number" placeholder="Enter phone number">
+                </div>
+                <div class="form-group">
+                    <label for="edit_role">Role</label>
+                    <select id="edit_role" name="role" required>
+                        <option value="">Select role</option>
+                        <option value="manager">Manager</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new_password">New Password (leave blank to keep current)</label>
+                    <input type="password" id="new_password" name="new_password" placeholder="Enter new password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden Forms for Actions -->
+<form id="toggleStatusForm" method="POST" action="{% url 'staff_list' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="toggle_status">
+    <input type="hidden" name="user_id" id="toggle_user_id">
+</form>
+
+<form id="deleteForm" method="POST" action="{% url 'staff_list' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="user_id" id="delete_user_id">
+</form>
 {% endblock %}
 
 {% block extra_js %}
@@ -159,7 +238,7 @@
     {% endfor %}
     {% endif %}
 
-    // Modal functionality
+    // Add Staff Modal functionality
     const addStaffBtn = document.getElementById('addStaffBtn');
     const addStaffModal = document.getElementById('addStaffModal');
     const closeModal = document.getElementById('closeModal');
@@ -183,10 +262,84 @@
         }
     });
 
-    // Close modal on escape key
+    // Edit Staff Modal functionality
+    const editStaffModal = document.getElementById('editStaffModal');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+    function openEditModal(userId, username, email, phone, role) {
+        document.getElementById('edit_user_id').value = userId;
+        document.getElementById('edit_username').value = username;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_phone_number').value = phone;
+        document.getElementById('edit_role').value = role;
+        document.getElementById('new_password').value = '';
+        editStaffModal.classList.add('active');
+    }
+
+    closeEditModal.addEventListener('click', () => {
+        editStaffModal.classList.remove('active');
+    });
+
+    cancelEditBtn.addEventListener('click', () => {
+        editStaffModal.classList.remove('active');
+    });
+
+    editStaffModal.addEventListener('click', (e) => {
+        if (e.target === editStaffModal) {
+            editStaffModal.classList.remove('active');
+        }
+    });
+
+    // Toggle Status confirmation
+    function confirmToggleStatus(userId, username, isActive) {
+        const action = isActive ? 'deactivate' : 'activate';
+        const actionTitle = isActive ? 'Deactivate User?' : 'Activate User?';
+        const actionText = isActive 
+            ? `Are you sure you want to deactivate "${username}"? They will not be able to login.`
+            : `Are you sure you want to activate "${username}"? They will be able to login again.`;
+        
+        Swal.fire({
+            title: actionTitle,
+            text: actionText,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: isActive ? '#ff9800' : '#4caf50',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: isActive ? 'Yes, Deactivate' : 'Yes, Activate',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('toggle_user_id').value = userId;
+                document.getElementById('toggleStatusForm').submit();
+            }
+        });
+    }
+
+    // Delete confirmation
+    function confirmDelete(userId, username) {
+        Swal.fire({
+            title: 'Delete User?',
+            text: `Are you sure you want to delete "${username}"? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e53935',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete_user_id').value = userId;
+                document.getElementById('deleteForm').submit();
+            }
+        });
+    }
+
+    // Close modals on escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && addStaffModal.classList.contains('active')) {
+        if (e.key === 'Escape') {
             addStaffModal.classList.remove('active');
+            editStaffModal.classList.remove('active');
         }
     });
 </script>

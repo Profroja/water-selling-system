@@ -37,7 +37,7 @@ def customer_list(request):
             has_mita = request.POST.get('has_mita', 'no')
             total_units = request.POST.get('total_units', '0')
             
-            if first_name and last_name and phone_number and street_id:
+            if first_name and phone_number and street_id:
                 street = Street.objects.get(id=street_id)
                 
                 # Parse total_units - default to 0 if not provided or invalid
@@ -48,7 +48,7 @@ def customer_list(request):
                 
                 Customer.objects.create(
                     first_name=first_name,
-                    last_name=last_name,
+                    last_name=last_name or '',
                     phone_number=phone_number,
                     street=street,
                     total_units=units_value

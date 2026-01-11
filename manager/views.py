@@ -80,27 +80,93 @@ def staff_list(request):
         return redirect('login')
     
     if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        # Handle toggle active status
+        if action == 'toggle_status':
+            user_id = request.POST.get('user_id')
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                user.is_active = not user.is_active
+                user.save()
+                status = 'activated' if user.is_active else 'deactivated'
+                messages.success(request, f'User "{user.username}" has been {status}.')
+            except CustomUser.DoesNotExist:
+                messages.error(request, 'User not found.')
+            return redirect('staff_list')
+        
+        # Handle edit user
+        if action == 'edit':
+            user_id = request.POST.get('user_id')
+            username = request.POST.get('username')
+            email = request.POST.get('email')
+            phone_number = request.POST.get('phone_number')
+            role = request.POST.get('role')
+            new_password = request.POST.get('new_password')
+            
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                
+                # Check if username is taken by another user
+                if CustomUser.objects.filter(username=username).exclude(id=user_id).exists():
+                    messages.error(request, 'Username already exists.')
+                    return redirect('staff_list')
+                
+                # Check if email is taken by another user
+                if email and CustomUser.objects.filter(email=email).exclude(id=user_id).exists():
+                    messages.error(request, 'Email already exists.')
+                    return redirect('staff_list')
+                
+                user.username = username
+                user.email = email
+                user.phone_number = phone_number
+                user.role = role
+                
+                # Update password if provided
+                if new_password:
+                    user.set_password(new_password)
+                
+                user.save()
+                messages.success(request, f'User "{username}" updated successfully.')
+            except CustomUser.DoesNotExist:
+                messages.error(request, 'User not found.')
+            return redirect('staff_list')
+        
+        # Handle delete user
+        if action == 'delete':
+            user_id = request.POST.get('user_id')
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                username = user.username
+                user.delete()
+                messages.success(request, f'User "{username}" has been deleted.')
+            except CustomUser.DoesNotExist:
+                messages.error(request, 'User not found.')
+            return redirect('staff_list')
+        
+        # Handle add new user (default action)
         username = request.POST.get('username')
         email = request.POST.get('email')
         phone_number = request.POST.get('phone_number')
         password = request.POST.get('password')
         role = request.POST.get('role')
         
-        # Check if username already exists
-        if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists.')
-        elif CustomUser.objects.filter(email=email).exists():
-            messages.error(request, 'Email already exists.')
-        else:
-            user = CustomUser.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                phone_number=phone_number,
-                role=role
-            )
-            messages.success(request, f'Staff member "{username}" created successfully.')
-            return redirect('staff_list')
+        if username and password and role:
+            # Check if username already exists
+            if CustomUser.objects.filter(username=username).exists():
+                messages.error(request, 'Username already exists.')
+            elif email and CustomUser.objects.filter(email=email).exists():
+                messages.error(request, 'Email already exists.')
+            else:
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    phone_number=phone_number,
+                    role=role
+                )
+                messages.success(request, f'Staff member "{username}" created successfully.')
+                return redirect('staff_list')
     
     # Get all managers and staff
     staff_list = CustomUser.objects.filter(role__in=['manager', 'staff']).order_by('-date_joined')
@@ -140,7 +206,7 @@ def manager_customer_list(request):
             has_mita = request.POST.get('has_mita', 'no')
             total_units = request.POST.get('total_units', '0')
             
-            if first_name and last_name and phone_number and street_id:
+            if first_name and phone_number and street_id:
                 street = Street.objects.get(id=street_id)
                 
                 # Parse total_units - default to 0 if not provided or invalid
@@ -151,7 +217,7 @@ def manager_customer_list(request):
                 
                 Customer.objects.create(
                     first_name=first_name,
-                    last_name=last_name,
+                    last_name=last_name or '',
                     phone_number=phone_number,
                     street=street,
                     total_units=units_value
