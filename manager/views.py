@@ -1961,7 +1961,7 @@ def download_customer_template(request):
     ws.cell(row=4, column=1).font = Font(bold=True, color="FF0000")
     ws.cell(row=5, column=1, value="1. Jina la Kwanza ni lazima (required)")
     ws.cell(row=6, column=1, value="2. Jina la Mwisho si lazima (optional)")
-    ws.cell(row=7, column=1, value="3. Namba ya Simu ni lazima (required)")
+    ws.cell(row=7, column=1, value="3. Namba ya Simu si lazima (optional)")
     ws.cell(row=8, column=1, value="4. Region, District, na Mtaa - tumia orodha kwenye sheet 'Mitaa Iliyopo'")
     ws.cell(row=9, column=1, value="5. Mita No. weka 0 kama mteja hana mita")
     ws.cell(row=10, column=1, value="6. Futa mfano wa row 2 kabla ya kuupload")
@@ -2050,11 +2050,6 @@ def upload_customers_excel(request):
             # Validate required fields
             if not first_name:
                 errors.append(f"Row {row_num}: Jina la Kwanza halijajazwa")
-                error_count += 1
-                continue
-            
-            if not phone_number:
-                errors.append(f"Row {row_num}: Namba ya Simu haijajazwa")
                 error_count += 1
                 continue
             
