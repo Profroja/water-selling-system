@@ -1950,9 +1950,37 @@ def download_customer_template(request):
     ws.cell(row=5, column=1, value="1. Jina la Kwanza ni lazima (required)")
     ws.cell(row=6, column=1, value="2. Jina la Mwisho si lazima (optional)")
     ws.cell(row=7, column=1, value="3. Namba ya Simu ni lazima (required)")
-    ws.cell(row=8, column=1, value="4. Region, District, na Mtaa ni lazima - mtaa utaundwa kama haupo")
+    ws.cell(row=8, column=1, value="4. Region, District, na Mtaa - tumia orodha kwenye sheet 'Mitaa Iliyopo'")
     ws.cell(row=9, column=1, value="5. Mita No. weka 0 kama mteja hana mita")
     ws.cell(row=10, column=1, value="6. Futa mfano wa row 2 kabla ya kuupload")
+    ws.cell(row=11, column=1, value="7. Angalia sheet 'Mitaa Iliyopo' kuona mitaa yote iliyopo")
+    
+    # Create second sheet with available streets
+    ws_streets = wb.create_sheet(title="Mitaa Iliyopo")
+    
+    # Street sheet headers
+    street_headers = ['S/N', 'Region', 'District', 'Mtaa (Street)']
+    street_header_fill = PatternFill(start_color="28a745", end_color="28a745", fill_type="solid")
+    for col, header in enumerate(street_headers, 1):
+        cell = ws_streets.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = street_header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Set street sheet column widths
+    street_col_widths = [8, 20, 20, 25]
+    for col, width in enumerate(street_col_widths, 1):
+        ws_streets.column_dimensions[get_column_letter(col)].width = width
+    
+    # Add all available streets
+    streets = Street.objects.all().order_by('region', 'district', 'street_name')
+    for idx, street in enumerate(streets, 1):
+        row_num = idx + 1
+        ws_streets.cell(row=row_num, column=1, value=idx).border = thin_border
+        ws_streets.cell(row=row_num, column=2, value=street.region).border = thin_border
+        ws_streets.cell(row=row_num, column=3, value=street.district).border = thin_border
+        ws_streets.cell(row=row_num, column=4, value=street.street_name).border = thin_border
     
     # Create response
     response = HttpResponse(
