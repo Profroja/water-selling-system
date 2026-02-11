@@ -134,7 +134,7 @@
                         </span>
                     </td>
                     <td>
-                        <button class="action-btn" title="Edit">
+                        <button class="action-btn" title="Edit" onclick="editCustomer({{ customer.id }}, '{{ customer.first_name }}', '{{ customer.last_name }}', '{{ customer.phone_number }}', '{{ customer.street.id|default:"" }}', {{ customer.total_units }})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="action-btn delete" title="Delete" onclick="deleteCustomer({{ customer.id }}, '{{ customer.first_name }} {{ customer.last_name }}')">
@@ -255,6 +255,62 @@
     <input type="hidden" name="customer_id" id="delete_customer_id">
 </form>
 
+<!-- Edit Customer Modal -->
+<div class="modal-overlay" id="editCustomerModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Hariri Mteja</h2>
+            <button class="modal-close" id="closeEditModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'manager_customer_list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit_customer">
+            <input type="hidden" name="customer_id" id="edit_customer_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_first_name">Jina la Kwanza</label>
+                    <input type="text" id="edit_first_name" name="edit_first_name" required placeholder="Enter first name">
+                </div>
+                <div class="form-group">
+                    <label for="edit_last_name">Jina la Mwisho</label>
+                    <input type="text" id="edit_last_name" name="edit_last_name" placeholder="Enter last name (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="edit_phone_number">Namba ya Simu</label>
+                    <input type="text" id="edit_phone_number" name="edit_phone_number" placeholder="Enter phone number">
+                </div>
+                <div class="form-group">
+                    <label for="edit_street">Mtaa</label>
+                    <select id="edit_street" name="edit_street" required style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 100%;">
+                        <option value="">Select street</option>
+                        {% for street in streets %}
+                        <option value="{{ street.id }}">{{ street.street_name }} - {{ street.district }}, {{ street.region }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_has_mita">Je, mteja ana Mita (Units)?</label>
+                    <select id="edit_has_mita" name="edit_has_mita" onchange="toggleEditMitaInput()" style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 100%;">
+                        <option value="no">Hapana (No)</option>
+                        <option value="yes">Ndiyo (Yes)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editMitaInputGroup" style="display: none;">
+                    <label for="edit_total_units">Mita No. (Units)</label>
+                    <input type="number" id="edit_total_units" name="edit_total_units" placeholder="Ingiza idadi ya units" step="0.01" min="0" style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Hifadhi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Upload Excel Modal -->
 <div class="modal-overlay" id="uploadExcelModal" style="display: none;">
     <div class="modal">
@@ -356,11 +412,31 @@
         }
     });
 
+    // Edit Customer Modal functionality
+    const editCustomerModal = document.getElementById('editCustomerModal');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+    closeEditModal.addEventListener('click', () => {
+        editCustomerModal.classList.remove('active');
+    });
+
+    cancelEditBtn.addEventListener('click', () => {
+        editCustomerModal.classList.remove('active');
+    });
+
+    editCustomerModal.addEventListener('click', (e) => {
+        if (e.target === editCustomerModal) {
+            editCustomerModal.classList.remove('active');
+        }
+    });
+
     // Close modals on escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             addCustomerModal.classList.remove('active');
             addStreetModal.classList.remove('active');
+            editCustomerModal.classList.remove('active');
         }
     });
 
@@ -404,6 +480,45 @@
             
             rows[i].style.display = found ? '' : 'none';
         }
+    }
+
+    // Toggle Edit Mita input visibility
+    function toggleEditMitaInput() {
+        const hasMita = document.getElementById('edit_has_mita').value;
+        const mitaInputGroup = document.getElementById('editMitaInputGroup');
+        const totalUnitsInput = document.getElementById('edit_total_units');
+        
+        if (hasMita === 'yes') {
+            mitaInputGroup.style.display = 'block';
+            totalUnitsInput.required = true;
+        } else {
+            mitaInputGroup.style.display = 'none';
+            totalUnitsInput.required = false;
+            totalUnitsInput.value = '';
+        }
+    }
+
+    // Edit customer function
+    function editCustomer(customerId, firstName, lastName, phoneNumber, streetId, totalUnits) {
+        document.getElementById('edit_customer_id').value = customerId;
+        document.getElementById('edit_first_name').value = firstName;
+        document.getElementById('edit_last_name').value = lastName;
+        document.getElementById('edit_phone_number').value = phoneNumber;
+        document.getElementById('edit_street').value = streetId;
+        
+        if (totalUnits > 0) {
+            document.getElementById('edit_has_mita').value = 'yes';
+            document.getElementById('editMitaInputGroup').style.display = 'block';
+            document.getElementById('edit_total_units').value = totalUnits;
+            document.getElementById('edit_total_units').required = true;
+        } else {
+            document.getElementById('edit_has_mita').value = 'no';
+            document.getElementById('editMitaInputGroup').style.display = 'none';
+            document.getElementById('edit_total_units').value = '';
+            document.getElementById('edit_total_units').required = false;
+        }
+        
+        editCustomerModal.classList.add('active');
     }
 
     // Delete customer function

@@ -198,6 +198,29 @@ def manager_customer_list(request):
                 messages.error(request, 'Please fill in all street fields.')
             return redirect('manager_customer_list')
         
+        elif action == 'edit_customer':
+            customer_id = request.POST.get('customer_id')
+            if customer_id:
+                try:
+                    customer = Customer.objects.get(id=customer_id)
+                    customer.first_name = request.POST.get('edit_first_name', customer.first_name)
+                    customer.last_name = request.POST.get('edit_last_name', '') or ''
+                    customer.phone_number = request.POST.get('edit_phone_number', customer.phone_number)
+                    edit_street_id = request.POST.get('edit_street')
+                    if edit_street_id:
+                        customer.street = Street.objects.get(id=edit_street_id)
+                    edit_has_mita = request.POST.get('edit_has_mita', 'no')
+                    edit_total_units = request.POST.get('edit_total_units', '0')
+                    try:
+                        customer.total_units = float(edit_total_units) if edit_has_mita == 'yes' and edit_total_units else 0
+                    except (ValueError, TypeError):
+                        customer.total_units = 0
+                    customer.save()
+                    messages.success(request, f'Mteja "{customer.first_name} {customer.last_name}" amebadilishwa.')
+                except Customer.DoesNotExist:
+                    messages.error(request, 'Mteja hajapatikana.')
+            return redirect('manager_customer_list')
+        
         elif action == 'delete_customer':
             customer_id = request.POST.get('customer_id')
             if customer_id:
