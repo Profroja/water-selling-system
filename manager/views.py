@@ -286,20 +286,49 @@ def manager_street_list(request):
         return redirect('login')
     
     if request.method == 'POST':
-        region = request.POST.get('region')
-        district = request.POST.get('district')
-        street_name = request.POST.get('street_name')
+        action = request.POST.get('action')
         
-        if region and district and street_name:
-            Street.objects.get_or_create(
-                region=region,
-                district=district,
-                street_name=street_name
-            )
-            messages.success(request, f'Street "{street_name}" added successfully.')
+        if action == 'edit_street':
+            street_id = request.POST.get('street_id')
+            if street_id:
+                try:
+                    street = Street.objects.get(id=street_id)
+                    street.region = request.POST.get('edit_region', street.region)
+                    street.district = request.POST.get('edit_district', street.district)
+                    street.street_name = request.POST.get('edit_street_name', street.street_name)
+                    street.save()
+                    messages.success(request, f'Mtaa "{street.street_name}" umebadilishwa.')
+                except Street.DoesNotExist:
+                    messages.error(request, 'Mtaa haujapatikana.')
+            return redirect('manager_street_list')
+        
+        elif action == 'delete_street':
+            street_id = request.POST.get('street_id')
+            if street_id:
+                try:
+                    street = Street.objects.get(id=street_id)
+                    street_name = street.street_name
+                    street.delete()
+                    messages.success(request, f'Mtaa "{street_name}" umefutwa.')
+                except Street.DoesNotExist:
+                    messages.error(request, 'Mtaa haujapatikana.')
+            return redirect('manager_street_list')
+        
         else:
-            messages.error(request, 'Please fill in all required fields.')
-        return redirect('manager_street_list')
+            region = request.POST.get('region')
+            district = request.POST.get('district')
+            street_name = request.POST.get('street_name')
+            
+            if region and district and street_name:
+                Street.objects.get_or_create(
+                    region=region,
+                    district=district,
+                    street_name=street_name
+                )
+                messages.success(request, f'Street "{street_name}" added successfully.')
+            else:
+                messages.error(request, 'Please fill in all required fields.')
+            return redirect('manager_street_list')
     
     streets = Street.objects.all()
     return render(request, 'manager_streets.html', {

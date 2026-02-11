@@ -34,10 +34,10 @@
                     <td>{{ street.region }}</td>
                     <td>{{ street.customers.count }}</td>
                     <td>
-                        <button class="action-btn" title="Edit">
+                        <button class="action-btn" title="Edit" onclick="editStreet({{ street.id }}, '{{ street.region }}', '{{ street.district }}', '{{ street.street_name }}')">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn delete" title="Delete">
+                        <button class="action-btn delete" title="Delete" onclick="deleteStreet({{ street.id }}, '{{ street.street_name }}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -87,6 +87,48 @@
         </form>
     </div>
 </div>
+<!-- Hidden Delete Form -->
+<form id="deleteStreetForm" method="POST" action="{% url 'manager_street_list' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_street">
+    <input type="hidden" name="street_id" id="delete_street_id">
+</form>
+
+<!-- Edit Street Modal -->
+<div class="modal-overlay" id="editStreetModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Hariri Mtaa</h2>
+            <button class="modal-close" id="closeEditModal">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'manager_street_list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit_street">
+            <input type="hidden" name="street_id" id="edit_street_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_region">MKOA</label>
+                    <input type="text" id="edit_region" name="edit_region" required placeholder="Enter region">
+                </div>
+                <div class="form-group">
+                    <label for="edit_district">WILAYA</label>
+                    <input type="text" id="edit_district" name="edit_district" required placeholder="Enter district">
+                </div>
+                <div class="form-group">
+                    <label for="edit_street_name">JINA LA MTAA</label>
+                    <input type="text" id="edit_street_name" name="edit_street_name" required placeholder="Enter street name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Hifadhi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -129,11 +171,59 @@
         }
     });
 
-    // Close modal on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && addStreetModal.classList.contains('active')) {
-            addStreetModal.classList.remove('active');
+    // Edit Street Modal functionality
+    const editStreetModal = document.getElementById('editStreetModal');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+    closeEditModal.addEventListener('click', () => {
+        editStreetModal.classList.remove('active');
+    });
+
+    cancelEditBtn.addEventListener('click', () => {
+        editStreetModal.classList.remove('active');
+    });
+
+    editStreetModal.addEventListener('click', (e) => {
+        if (e.target === editStreetModal) {
+            editStreetModal.classList.remove('active');
         }
     });
+
+    // Close modals on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            addStreetModal.classList.remove('active');
+            editStreetModal.classList.remove('active');
+        }
+    });
+
+    // Edit street function
+    function editStreet(streetId, region, district, streetName) {
+        document.getElementById('edit_street_id').value = streetId;
+        document.getElementById('edit_region').value = region;
+        document.getElementById('edit_district').value = district;
+        document.getElementById('edit_street_name').value = streetName;
+        editStreetModal.classList.add('active');
+    }
+
+    // Delete street function
+    function deleteStreet(streetId, streetName) {
+        Swal.fire({
+            title: 'Una uhakika?',
+            text: `Unataka kufuta mtaa "${streetName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ndio, Futa!',
+            cancelButtonText: 'Hapana'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete_street_id').value = streetId;
+                document.getElementById('deleteStreetForm').submit();
+            }
+        });
+    }
 </script>
 {% endblock %}
